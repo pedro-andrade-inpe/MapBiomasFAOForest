@@ -1,9 +1,9 @@
+### SPLIT RASTER DATA INTO SEVERAL TILES TO ALLOW PROCESSING NEIGHBORHOODS
 
-require(dplyr)
+# DIRECTORY WHERE MAPBIOMAS TIFF FILES FOR BRAZIL ARE STORED
 mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/aline/"
 
 # SPLIT RASTER INTO SEVERAL TILES
-
 splitRaster <- function(inputFile, outputDir, n.side){
   r  <- raster::raster(inputFile)
   er <- raster::extent(r)
@@ -29,13 +29,16 @@ splitRaster <- function(inputFile, outputDir, n.side){
   }
 }
 
-files <- list.files(mdir, pattern = "\\.tif$")[2]
+# TIF FILES TO BE PROCESSED
+# THE SCRIPT WILL CREATE A DIRECTORY WITH THE SAME NAME OF THE FILE
+# TO STORE THE SPLITTED RASTERS
+files <- list.files(mdir, pattern = "\\.tif$")[2] # [2] AS 2000 DATA IS ALSO IN THE DIRECTORY
 
 for(file in files){
   fname <- tools::file_path_sans_ext(file)
   file_with_path <- paste0(mdir, file)
   mraster <- raster::raster(file_with_path)
-  break_dim <- ceiling(sqrt(raster::ncell(mraster)/5e7))
+  break_dim <- ceiling(sqrt(raster::ncell(mraster) / 5e7)) # TILES WITH 5E7 X 5E7 PIXELS 
   newdir <- paste0(mdir, fname)
   dir.create(newdir)
   

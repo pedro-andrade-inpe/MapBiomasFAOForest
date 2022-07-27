@@ -1,9 +1,14 @@
+### AGGREGATE THE PIXELS INTO SIMU
+### CREATES A CSV FILE WHERE EACH ROW CONTAINS THE NUMBER OF PIXELS OF A
+### GIVEN TILE THAT OVERLAPS A GIVEN SIMU
 
 require(magrittr)
 
+# WHERE SIMU SHAPEFILE IS STORED
 basedir <- "C:\\Users\\pedro\\Dropbox\\pesquisa\\2021\\r+\\simu-brazil\\"
 v <- terra::vect(paste0(basedir, "simu-brazil.shp"))
 
+# WHERE PROCESSED TILES ARE STORED (CREATED BY PREVIOUS SCRIPT)
 mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/aline/result/"
 
 files <- list.files(mdir, pattern = "\\.tif$")
@@ -23,6 +28,6 @@ for(file in files){
     pixels$file <- file
     pixels$line <- i
     if(pixels$quantity[1] > 0)
-      write.table(pixels, "result-forest-simu-2022-missing2.csv", sep = ",", append = TRUE, row.names = FALSE, col.names = FALSE)
+      write.table(pixels, "result-forest-simu-2020.csv", sep = ",", append = TRUE, row.names = FALSE, col.names = FALSE)
   }
 }

@@ -1,31 +1,15 @@
+### CONVERT THE OUTPUT INTO A GMS FILE
 
 require(magrittr)
 
+# WHERE SIMU SHAPEFILE IS STORED
 basedir <- "C:\\Users\\pedro\\Dropbox\\pesquisa\\2021\\r+\\simu-brazil\\"
 v <- terra::vect(paste0(basedir, "simu-brazil.shp"))
-dim(v)
 
-
-
-mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/mapbiomas/original_41/"
+# THE CSV CREATED BY THE LAST SCRIPT
 mforest <- read.table("result-forest-simu-2022-simu.csv", sep=",", header = FALSE)
-missingforest <- read.table("result-forest-simu-2022-missing2.csv", sep=",", header = FALSE)
-
 names(mforest) <- c("ID", "quantity", "file", "i")
-names(missingforest) <- c("ID", "quantity", "file", "i")
 
-missingforest %>% dplyr::filter(ID == "142121")
-
-
-sum(mforest$quantity)
-
-mforest <- mforest %>% 
-  dplyr::filter(!(ID %in% missingforest$ID)) %>%
-  rbind(missingforest)
-
-
-
-units::install_unit("Mha", "1e6ha")
 units::install_unit("kha", "1e3ha")
 
 pixelToHa <- function(value) units::set_units(value * 0.09, "ha")
