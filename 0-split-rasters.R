@@ -1,4 +1,9 @@
 
+require(dplyr)
+mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/aline/"
+
+# SPLIT RASTER INTO SEVERAL TILES
+
 splitRaster <- function(inputFile, outputDir, n.side){
   r  <- raster::raster(inputFile)
   er <- raster::extent(r)
@@ -12,24 +17,26 @@ splitRaster <- function(inputFile, outputDir, n.side){
   ## loop over extents and crop
   for(i in 1:nrow(cS)) {
     cat(paste0("tile ", i, "/", nrow(cS), "\n"))
-    ex1 <- c(cS[i, 1], cS[i, 1] + dx, cS[i, 2], cS[i, 2] + dy)  # create extents for cropping raster
-    cl1 <- raster::crop(r, ex1, progress = "text")
     outputFile <- paste0(tools::file_path_sans_ext(basename(inputFile)), "-tile-", i, ".tif")
-    raster::writeRaster(cl1, paste0(outputDir, "/", outputFile), progress = "text", overwrite = TRUE)
+    output <- paste0(outputDir, "/", outputFile)
+    if(file.exists(output))
+      cat("File already exists\n")
+    else{
+      ex1 <- c(cS[i, 1], cS[i, 1] + dx, cS[i, 2], cS[i, 2] + dy)  # create extents for cropping raster
+      cl1 <- raster::crop(r, ex1, progress = "text")
+      raster::writeRaster(cl1, output, progress = "text", overwrite = TRUE)
+    }
   }
 }
 
-### SPLIT TIF OF EACH BIOME
-
-mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/mapbiomas/original_41/"
-files <- list.files(mdir, pattern = "\\.tif$")
+files <- list.files(mdir, pattern = "\\.tif$")[2]
 
 for(file in files){
-  biome <- tools::file_path_sans_ext(file)
+  fname <- tools::file_path_sans_ext(file)
   file_with_path <- paste0(mdir, file)
   mraster <- raster::raster(file_with_path)
-  break_dim <- ceiling(sqrt(raster::ncell(mraster) / 1e8)) # 1e8 x 1e8 pixels
-  newdir <- paste0(mdir, biome)
+  break_dim <- ceiling(sqrt(raster::ncell(mraster)/5e7))
+  newdir <- paste0(mdir, fname)
   dir.create(newdir)
   
   splitRaster(file_with_path, newdir, break_dim)

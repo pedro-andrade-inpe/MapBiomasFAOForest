@@ -1,41 +1,45 @@
 ### PROCESS EACH TILE
 
-mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/mapbiomas/original_41/"
-biomes <- tools::file_path_sans_ext(list.files(mdir, pattern = "\\.tif$"))
+folder <- tools::file_path_sans_ext(list.files(mdir, pattern = "\\.tif$"))[2]
 myclass <- 3
 
 dir.create(paste0(mdir, "result"))
-dir.create(paste0(mdir, "result/d4"))
-dir.create(paste0(mdir, "result/d8"))
 
-for(biome in biomes){
-  cat(paste0("Processing ", biome, "\n"))
+files <- list.files(paste0(mdir, folder))
+
+for(file in files){
+  cat(paste0("Processing ", file, "\n"))
   
-  files <- list.files(paste0(mdir, biome))
-  
-  for(file in files){
-    cat(paste0("Processing ", file, "\n"))
+  mraster <- raster::raster(paste0(mdir, biome, "/", file))
+  if(myclass %in% raster::unique(mraster)){
+    direction <- 4
+    outputFile <- paste0(mdir, "result/", file)
     
-    mraster <- raster::raster(paste0(mdir, biome, "/", file))
-    if(myclass %in% raster::unique(mraster)){
-      for(direction in c(4, 8)){
-        patched_raster <- landscapemetrics::get_patches(mraster, class = myclass, directions = direction)
-        patched_raster <- patched_raster$layer_1[[paste0("class_", myclass)]]
-        result <- raster::freq(patched_raster, useNA = "no") %>%
+    if(!file.exists(outputFile)){
+      cat(paste0("Creating ", outputFile, "\n"))
+      patched_raster <- landscapemetrics::get_patches(mraster, class = myclass, directions = direction)
+      patched_raster <- patched_raster$layer_1[[paste0("class_", myclass)]]
+      #raster::writeRaster(patched_raster, paste0(mdir, "result/","patchedRaster2.tif"))
+      result <- raster::freq(patched_raster, useNA = "no")
+      
+      if(!is.null(dim(result))){
+        result <- result %>%
           as.data.frame()
         
-        treesOutsideForest <- result %>%
-          dplyr::mutate(area = units::set_units(count * 0.09, "ha")) %>%
-          dplyr::filter(area < units::set_units(0.5, "ha"))
+        treesWithoutForest <- result %>%
+          dplyr::mutate(area = units::set_units(count * 0.09, "ha")) %>% # area of each forest patch
+          dplyr::filter(area < units::set_units(0.5, "ha")) # minimum area to be considered forest
         
-        if(dim(treesOutsideForest)[1] > 0){ # there are trees without forest
+        if(dim(treesWithoutForest)[1] > 0){ # there are trees without forest
           max_value <- max(result$value)
-          replacements <- rep(NA, max_value)
-          replacements[treesOutsideForest$value] <- 1
+          replacements <- rep(0, max_value)
+          replacements[treesWithoutForest$value] <- 1
           
           finalRaster <- raster::calc(patched_raster, fun = function(x) replacements[x])
-          raster::writeRaster(finalRaster, paste0(mdir, "result/d", direction, "/", file))
+          raster::writeRaster(finalRaster, outputFile)
         }
+        else
+          stop("The other situation occurs but it was not implemented")
       }
     }
   }
