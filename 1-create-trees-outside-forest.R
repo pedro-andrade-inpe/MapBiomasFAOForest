@@ -6,50 +6,49 @@
 mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/aline/"
 
 # DIRECTORY WHERE TILES ARE STORED (BUILT BY THE PREVIOUS SCRIPT)
-folder <- tools::file_path_sans_ext(list.files(mdir, pattern = "\\.tif$"))[2]
+folder <- tools::file_path_sans_ext(list.files(mdir, pattern = "\\.tif$")[4])
 
 # VALUE 3 MEANS FOREST IN MAPBIOMAS COLLECTION 6
 myclass <- 3
 
 # WHERE THE OUTPUT WILL BE STORED
-dir.create(paste0(mdir, "result"))
+dir.create(paste0(mdir, "result"), showWarnings = FALSE)
 
-files <- list.files(paste0(mdir, folder))
+files <- list.files(paste0(mdir, folder), pattern = "\\.tif$", full.names = TRUE)
 
 for(file in files){
   cat(paste0("Processing ", file, "\n"))
   
-  mraster <- raster::raster(paste0(mdir, biome, "/", file))
-  if(myclass %in% raster::unique(mraster)){
+  mraster <- terra::rast(file)
+  if(myclass %in% unique(values(mraster))){
     direction <- 4 # 4 PIXELS IN THE NEIGHBORHOOD
-    outputFile <- paste0(mdir, "result/", file)
+    outputFile <- paste0(mdir, "result/", basename(file))
     
     if(!file.exists(outputFile)){
       cat(paste0("Creating ", outputFile, "\n"))
       patched_raster <- landscapemetrics::get_patches(mraster, class = myclass, directions = direction)
       patched_raster <- patched_raster$layer_1[[paste0("class_", myclass)]]
-      #raster::writeRaster(patched_raster, paste0(mdir, "result/","patchedRaster2.tif"))
-      result <- raster::freq(patched_raster, useNA = "no")
+      
+      result <- terra::freq(patched_raster)
       
       if(!is.null(dim(result))){
-        result <- result %>%
-          as.data.frame()
+        result <- as.data.frame(result)
         
         treesWithoutForest <- result %>%
           dplyr::mutate(area = units::set_units(count * 0.09, "ha")) %>% # area of each forest patch
           dplyr::filter(area < units::set_units(0.5, "ha")) # minimum area to be considered forest
         
-        if(dim(treesWithoutForest)[1] > 0){ # there are trees without forest
-          max_value <- max(result$value)
+        if(nrow(treesWithoutForest) > 0){ # there are trees without forest
+          max_value <- max(result$value, na.rm = TRUE)
           replacements <- rep(0, max_value)
           replacements[treesWithoutForest$value] <- 1
           
-          finalRaster <- raster::calc(patched_raster, fun = function(x) replacements[x])
-          raster::writeRaster(finalRaster, outputFile)
+          finalRaster <- terra::classify(patched_raster, data.frame(from = treesWithoutForest$value, to = 1), others = 0)
+          terra::writeRaster(finalRaster, outputFile, overwrite = TRUE)
         }
-        else
-          stop("The other situation occurs but it was not implemented")
-          # IF THIS SITUATION OCCURS THIS MUST BE IMPLEMENTED
+        else{
+          warning("The other situation occurs but it was not implemented")
+        }
       }
     }
   }

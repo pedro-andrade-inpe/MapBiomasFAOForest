@@ -7,7 +7,7 @@ basedir <- "C:\\Users\\pedro\\Dropbox\\pesquisa\\2021\\r+\\simu-brazil\\"
 v <- terra::vect(paste0(basedir, "simu-brazil.shp"))
 
 # THE CSV CREATED BY THE LAST SCRIPT
-mforest <- read.table("result-forest-simu-2022-simu.csv", sep=",", header = FALSE)
+mforest <- read.table("result-forest-simu-2020.csv", sep=",", header = FALSE)
 names(mforest) <- c("ID", "quantity", "file", "i")
 
 units::install_unit("kha", "1e3ha")
