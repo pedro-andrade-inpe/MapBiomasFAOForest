@@ -9,6 +9,7 @@ mdir <- "C:/Users/pedro/Dropbox/pesquisa/2022/aline/"
 folder <- tools::file_path_sans_ext(list.files(mdir, pattern = "\\.tif$")[4])
 
 # VALUE 3 MEANS FOREST IN MAPBIOMAS COLLECTION 6
+# VALUE 4 MEANS SAVANNA IN MAPBIOMAS COLLECTION 6
 myclass <- 3
 
 # WHERE THE OUTPUT WILL BE STORED
